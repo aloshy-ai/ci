@@ -12,6 +12,10 @@ on:
         required: false
         default: false
         type: boolean
+      enable-cachix:
+        required: false
+        default: false
+        type: boolean
       directory:
         required: false
         default: "."
@@ -58,6 +62,8 @@ on:
     secrets:
       ssh-private-key:
         required: false
+      cachix-auth-token:
+        required: false
 
 jobs:
   inventory:
@@ -77,6 +83,11 @@ jobs:
       - uses: DeterminateSystems/nix-installer-action@main
         with:
           flakehub: true
+      - uses: cachix/cachix-action@v14
+        if: ${{ inputs.enable-cachix }}
+        with:
+          name: '${{ github.event.actor.login }}-${{ github.event.repo.name }}'
+          authToken: '${{ secrets.cachix-auth-token }}'
       - uses: DeterminateSystems/magic-nix-cache-action@v2
       - uses: webfactory/ssh-agent@v0.9.0
         if: ${{ inputs.enable-ssh-agent }}
@@ -105,6 +116,11 @@ jobs:
       - uses: DeterminateSystems/nix-installer-action@main
         with:
           determinate: true
+      - uses: cachix/cachix-action@v14
+        if: ${{ inputs.enable-cachix }}
+        with:
+          name: '${{ github.event.actor.login }}-${{ github.event.repo.name }}'
+          authToken: '${{ secrets.cachix-auth-token }}'
       - uses: DeterminateSystems/magic-nix-cache-action@v2
       - uses: webfactory/ssh-agent@v0.9.0
         if: ${{ inputs.enable-ssh-agent }}
@@ -143,6 +159,11 @@ jobs:
         if: ${{ !github.repository.fork && inputs.visibility != '' && (github.ref == format('refs/heads/{0}', inputs.default-branch) || startsWith(github.ref, 'refs/tags/')) }}
         with:
           flakehub: true
+      - uses: cachix/cachix-action@v14
+        if: ${{ inputs.enable-cachix }}
+        with:
+          name: '${{ github.event.actor.login }}-${{ github.event.repo.name }}'
+          authToken: '${{ secrets.cachix-auth-token }}'
       - uses: DeterminateSystems/magic-nix-cache-action@v2
         if: ${{ !github.repository.fork && inputs.visibility != '' && (github.ref == format('refs/heads/{0}', inputs.default-branch) || startsWith(github.ref, 'refs/tags/')) }}
       - uses: "DeterminateSystems/flakehub-push@main"
