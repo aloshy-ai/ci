@@ -18,7 +18,7 @@ on:
         type: boolean
       cachix-cache:
         required: false
-        default: ${{ github.event.repository.name }}
+        default: ${{ github.actor.login }}
         type: string
       directory:
         required: false
