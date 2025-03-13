@@ -125,10 +125,45 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/nix-installer-action@main
+        if: ${{ !(github.repository != github.event.repository) && (inputs.visibility != '' && (github.ref == format('refs/heads/{0}', inputs.default-branch) || startsWith(github.ref, 'refs/tags/')) || inputs.build-docs) }}
         with:
-          determinate: true
+          flakehub: true
+      # Install GitHub CLI for environment configuration
+      - name: Install GitHub CLI
+        if: ${{ inputs.build-docs && (github.ref == format('refs/heads/{0}', inputs.default-branch) || startsWith(github.ref, 'refs/tags/')) }}
+        run: |
+          if ! command -v gh &> /dev/null; then
+            curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+            echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+            sudo apt update
+            sudo apt install gh
+          fi
+      # Configure GitHub Pages deployment branch rules if building docs
+      - name: Configure GitHub Pages
+        if: ${{ inputs.build-docs && (github.ref == format('refs/heads/{0}', inputs.default-branch) || startsWith(github.ref, 'refs/tags/')) }}
+        run: |
+          # Configure deployment branch protection using GitHub API
+          BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            BRANCH_NAME="${GITHUB_REF#refs/tags/}"
+          fi
+          
+          # Check if github-pages environment exists
+          ENV_EXISTS=$(gh api repos/${{ github.repository }}/environments/github-pages --silent && echo "true" || echo "false")
+          
+          if [ "$ENV_EXISTS" == "true" ]; then
+            # Update the environment to allow the current branch
+            gh api --method PUT /repos/${{ github.repository }}/environments/github-pages \
+              -f deployment_branch_policy='{"protected_branches":false,"custom_branch_policies":true}' || true
+            
+            # Add the current branch to allowed deployment branches
+            gh api --method POST /repos/${{ github.repository }}/environments/github-pages/deployment-branch-policies \
+              -f name="$BRANCH_NAME" || true
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - uses: cachix/cachix-action@v14
-        if: ${{ inputs.enable-cachix }}
+        if: ${{ inputs.enable-cachix && !(github.repository != github.event.repository) && inputs.visibility != '' && (github.ref == format('refs/heads/{0}', inputs.default-branch) || startsWith(github.ref, 'refs/tags/')) }}
         with:
           name: ${{ inputs.cachix-cache }}
           authToken: ${{ secrets.cachix-auth-token }}
@@ -150,6 +185,7 @@ jobs:
       id-token: "write"
       contents: "write"
       pages: "write"
+      actions: "write"  # For workflow operations
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
