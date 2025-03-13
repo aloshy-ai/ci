@@ -150,6 +150,9 @@ jobs:
       id-token: "write"
       contents: "write"
       pages: "write"
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
 
     outputs:
       flake_name: ${{ steps.publish.outputs.flake_name }}
