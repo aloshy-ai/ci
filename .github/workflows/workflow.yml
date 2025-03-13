@@ -87,6 +87,7 @@ jobs:
     permissions:
       id-token: "write"
       contents: "read"
+      pages: "write"
 
     steps:
       - uses: actions/checkout@v4
@@ -121,6 +122,7 @@ jobs:
     permissions:
       id-token: "write"
       contents: "read"
+      pages: "write"
 
     steps:
       - uses: actions/checkout@v4
@@ -212,7 +214,6 @@ jobs:
       - name: Update repository website URL
         if: ${{ inputs.build-docs && (github.ref == format('refs/heads/{0}', inputs.default-branch) || startsWith(github.ref, 'refs/tags/')) }}
         run: |
-          # Update the repository website URL using GitHub API
           gh api --method PATCH /repos/${{ github.repository }} -f homepage="${{ steps.deployment.outputs.page_url }}"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
