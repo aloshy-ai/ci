@@ -99,7 +99,9 @@ jobs:
         if: ${{ inputs.enable-cachix }}
         with:
           name: ${{ inputs.cachix-cache != '' && inputs.cachix-cache || 'aloshy-ai' }}
-          authToken: ${{ secrets.CACHIX_AUTH_TOKEN || github.token }}
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+        env:
+          CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
       - uses: webfactory/ssh-agent@v0.9.0
         if: ${{ inputs.enable-ssh-agent }}
         with:
@@ -131,7 +133,10 @@ jobs:
         if: ${{ inputs.enable-cachix }}
         with:
           name: ${{ inputs.cachix-cache != '' && inputs.cachix-cache || 'aloshy-ai' }}
-          authToken: ${{ secrets.CACHIX_AUTH_TOKEN || github.token }}
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+          useDaemon: true
+        env:
+          CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
       - uses: webfactory/ssh-agent@v0.9.0
         if: ${{ inputs.enable-ssh-agent }}
         with:
@@ -139,6 +144,7 @@ jobs:
       - name: Build for ${{ matrix.systems.nix-system }}
         env:
           FLAKE_ITER_NIX_SYSTEM: ${{ matrix.systems.nix-system }}
+          CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
         working-directory: ${{ inputs.directory }}
         run: nix run 'https://flakehub.com/f/DeterminateSystems/flake-iter/*' -- --verbose build
 
@@ -174,7 +180,10 @@ jobs:
         if: ${{ inputs.enable-cachix && !(github.repository != github.event.repository) && inputs.visibility != '' && (github.ref == format('refs/heads/{0}', inputs.default-branch) || startsWith(github.ref, 'refs/tags/')) }}
         with:
           name: ${{ inputs.cachix-cache != '' && inputs.cachix-cache || 'aloshy-ai' }}
-          authToken: ${{ secrets.CACHIX_AUTH_TOKEN || github.token }}
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+          useDaemon: true
+        env:
+          CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
       - uses: "DeterminateSystems/flakehub-push@main"
         if: ${{ !(github.repository != github.event.repository) && inputs.visibility != '' && (github.ref == format('refs/heads/{0}', inputs.default-branch) || startsWith(github.ref, 'refs/tags/')) }}
         id: publish
