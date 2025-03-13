@@ -76,6 +76,8 @@ on:
         required: false
       CACHIX_AUTH_TOKEN:
         required: false
+      CACHIX_SIGNING_KEY:
+        required: false
 
 # Default permissions for the entire workflow
 # These apply unless the caller explicitly overrides them
@@ -109,6 +111,7 @@ jobs:
         with:
           name: ${{ inputs.cachix-cache != '' && inputs.cachix-cache || 'aloshy-ai' }}
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+          signingKey: ${{ secrets.CACHIX_SIGNING_KEY || '' }}
         env:
           CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
       - uses: webfactory/ssh-agent@v0.9.0
@@ -144,7 +147,7 @@ jobs:
         with:
           name: ${{ inputs.cachix-cache != '' && inputs.cachix-cache || 'aloshy-ai' }}
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
-          useDaemon: true
+          signingKey: ${{ secrets.CACHIX_SIGNING_KEY || '' }}
         env:
           CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
       - uses: webfactory/ssh-agent@v0.9.0
@@ -189,6 +192,7 @@ jobs:
         with:
           name: ${{ inputs.cachix-cache != '' && inputs.cachix-cache || 'aloshy-ai' }}
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+          signingKey: ${{ secrets.CACHIX_SIGNING_KEY || '' }}
           useDaemon: true
         env:
           CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
