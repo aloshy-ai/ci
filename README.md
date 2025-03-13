@@ -154,3 +154,48 @@ This workflow uses a collection of GitHub Actions by Determinate Systems, all of
 [signup]: https://flakehub.com/signup
 [tos]: https://determinate.systems/policies/terms-of-service
 [visibility]: https://docs.determinate.systems/flakehub/concepts/visibility
+
+### GitHub Pages Documentation Deployment
+
+To automatically build and deploy documentation to GitHub Pages, add the `build-docs` parameter:
+
+```yaml
+jobs:
+  DeterminateCI:
+    uses: DeterminateSystems/ci/.github/workflows/workflow.yml@main
+    permissions:
+      id-token: write
+      contents: write  # Required for GitHub Pages deployment
+      pages: write     # Required for GitHub Pages deployment
+    with:
+      visibility: public
+      build-docs: true
+```
+
+#### Configuring GitHub Pages Environment
+
+When the workflow first runs, it may fail with an error message like:
+```
+Error: Deployment rejected due to environment protection rules.
+The branch 'main' is not allowed to deploy to github-pages due to environment protection rules.
+```
+
+This occurs because GitHub automatically creates a `github-pages` environment with protection rules when you enable GitHub Pages. To fix this:
+
+1. Go to your repository on GitHub
+2. Navigate to **Settings** → **Environments**
+3. Click on the **github-pages** environment
+4. Under "Deployment branches and tags," select one of the following:
+   - **No restriction** - allows any branch to deploy
+   - **Selected branches and tags** - add your main branch (e.g., `main` or `master`)
+5. Click **Save protection rules**
+
+After configuring these settings, re-run the workflow and the deployment should succeed.
+
+By default, the workflow will build the `docs` package from your flake. You can specify a different package using the `docs-package` input:
+
+```yaml
+with:
+  build-docs: true
+  docs-package: "my-custom-docs"
+```
