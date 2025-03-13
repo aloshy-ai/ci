@@ -18,7 +18,7 @@ on:
         type: boolean
       cachix-cache:
         required: false
-        default: "aloshy"
+        default: ${{ vars.CACHIX_NAME || 'aloshy-ai' }}
         type: string
       directory:
         required: false
