@@ -172,25 +172,9 @@ jobs:
       build-docs: true
 ```
 
-#### Configuring GitHub Pages Environment
+The workflow uses [peaceiris/actions-gh-pages](https://github.com/peaceiris/actions-gh-pages) to handle the GitHub Pages deployment. This action creates a `gh-pages` branch in your repository with the documentation and configures GitHub Pages to serve content from this branch.
 
-When the workflow first runs, it may fail with an error message like:
-```
-Error: Deployment rejected due to environment protection rules.
-The branch 'main' is not allowed to deploy to github-pages due to environment protection rules.
-```
-
-This occurs because GitHub automatically creates a `github-pages` environment with protection rules when you enable GitHub Pages. To fix this:
-
-1. Go to your repository on GitHub
-2. Navigate to **Settings** → **Environments**
-3. Click on the **github-pages** environment
-4. Under "Deployment branches and tags," select one of the following:
-   - **No restriction** - allows any branch to deploy
-   - **Selected branches and tags** - add your main branch (e.g., `main` or `master`)
-5. Click **Save protection rules**
-
-After configuring these settings, re-run the workflow and the deployment should succeed.
+Unlike the official GitHub Pages actions, this approach doesn't require configuring environment protection rules, making it simpler to set up.
 
 By default, the workflow will build the `docs` package from your flake. You can specify a different package using the `docs-package` input:
 

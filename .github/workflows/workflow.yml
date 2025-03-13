@@ -150,9 +150,6 @@ jobs:
       id-token: "write"
       contents: "write"
       pages: "write"
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
 
     outputs:
       flake_name: ${{ steps.publish.outputs.flake_name }}
@@ -193,29 +190,23 @@ jobs:
         working-directory: ${{ inputs.directory }}
         run: nix build ".#${{ inputs.docs-package }}"
         
-      # Setup GitHub Pages
-      - name: Setup Pages
-        if: ${{ inputs.build-docs && (github.ref == format('refs/heads/{0}', inputs.default-branch) || startsWith(github.ref, 'refs/tags/')) }}
-        uses: actions/configure-pages@v5
-        
-      # Upload pages artifact
-      - name: Upload artifact
-        if: ${{ inputs.build-docs && (github.ref == format('refs/heads/{0}', inputs.default-branch) || startsWith(github.ref, 'refs/tags/')) }}
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: ${{ inputs.directory }}/result
-          
-      # Deploy to GitHub Pages  
+      # Deploy to GitHub Pages using peaceiris/actions-gh-pages
       - name: Deploy to GitHub Pages
         if: ${{ inputs.build-docs && (github.ref == format('refs/heads/{0}', inputs.default-branch) || startsWith(github.ref, 'refs/tags/')) }}
-        id: deployment
-        uses: actions/deploy-pages@v4
-        
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ${{ inputs.directory }}/result
+          force_orphan: true
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'
+          commit_message: 'docs: update documentation from ${{ github.sha }}'
+      
       # Update repository website URL
       - name: Update repository website URL
         if: ${{ inputs.build-docs && (github.ref == format('refs/heads/{0}', inputs.default-branch) || startsWith(github.ref, 'refs/tags/')) }}
         run: |
           # Update the repository website URL using GitHub API
-          gh api --method PATCH /repos/${{ github.repository }} -f homepage="${{ steps.deployment.outputs.page_url }}"
+          gh api --method PATCH /repos/${{ github.repository }} -f homepage="https://${{ github.repository_owner }}.github.io/$(echo "${{ github.repository }}" | cut -d'/' -f2)/"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
