@@ -190,6 +190,7 @@ jobs:
         working-directory: ${{ inputs.directory }}
         run: nix build ".#${{ inputs.docs-package }}"
         
+      # Deploy to GitHub Pages
       - name: Deploy to GitHub Pages
         if: ${{ inputs.build-docs && (github.ref == format('refs/heads/{0}', inputs.default-branch) || startsWith(github.ref, 'refs/tags/')) }}
         uses: peaceiris/actions-gh-pages@v3
@@ -205,13 +206,46 @@ jobs:
       - name: Enable GitHub Pages
         if: ${{ inputs.build-docs && (github.ref == format('refs/heads/{0}', inputs.default-branch) || startsWith(github.ref, 'refs/tags/')) }}
         run: |
+          echo "Enabling GitHub Pages for $GITHUB_REPOSITORY..."
+          
+          # Try to create GitHub Pages first, if it fails, try to update it
           echo '{"source": {"branch": "gh-pages", "path": "/"}}' | gh api --method POST "repos/$GITHUB_REPOSITORY/pages" --input - || {
-            # If the site already exists, try to update it instead
+            echo "GitHub Pages might already be enabled, trying to update configuration..."
             echo '{"source": {"branch": "gh-pages", "path": "/"}}' | gh api --method PUT "repos/$GITHUB_REPOSITORY/pages" --input -
           }
           
-          # Wait for GitHub Pages to be enabled
-          sleep 5
-          gh api repos/$GITHUB_REPOSITORY/pages --jq '.html_url' || echo "Could not get GitHub Pages URL yet, but it will be available soon"
+          # Poll for GitHub Pages status with exponential backoff
+          echo "Waiting for GitHub Pages to be enabled..."
+          
+          attempt=1
+          max_attempts=10
+          initial_wait=2
+          wait_time=$initial_wait
+          success=false
+          
+          while [ $attempt -le $max_attempts ]; do
+            echo "Attempt $attempt of $max_attempts (waiting ${wait_time}s between attempts)..."
+            
+            # Try to get the GitHub Pages status
+            if pages_url=$(gh api repos/$GITHUB_REPOSITORY/pages --jq '.html_url' 2>/dev/null); then
+              echo "✅ GitHub Pages successfully enabled!"
+              echo "Site will be available at: $pages_url"
+              success=true
+              break
+            fi
+            
+            # Wait before the next attempt with exponential backoff
+            echo "GitHub Pages not ready yet, waiting..."
+            sleep $wait_time
+            
+            # Increase wait time for next attempt (exponential backoff)
+            wait_time=$((wait_time * 2))
+            attempt=$((attempt + 1))
+          done
+          
+          if [ "$success" != "true" ]; then
+            echo "⚠️ Reached maximum number of attempts. GitHub Pages may still be being set up."
+            echo "You can check the status in the repository settings or by running: gh api repos/$GITHUB_REPOSITORY/pages"
+          fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
