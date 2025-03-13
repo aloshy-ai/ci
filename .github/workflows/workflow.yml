@@ -18,7 +18,7 @@ on:
         type: boolean
       cachix-cache:
         required: false
-        default: ${{ vars.CACHIX_NAME || 'aloshy-ai' }}
+        default: "${{ vars.CACHIX_NAME }}"
         type: string
       directory:
         required: false
@@ -98,7 +98,7 @@ jobs:
       - uses: cachix/cachix-action@v14
         if: ${{ inputs.enable-cachix }}
         with:
-          name: ${{ inputs.cachix-cache }}
+          name: ${{ inputs.cachix-cache != '' && inputs.cachix-cache || 'aloshy-ai' }}
           authToken: ${{ secrets.cachix-auth-token || github.token }}
       - uses: webfactory/ssh-agent@v0.9.0
         if: ${{ inputs.enable-ssh-agent }}
@@ -130,7 +130,7 @@ jobs:
       - uses: cachix/cachix-action@v14
         if: ${{ inputs.enable-cachix }}
         with:
-          name: ${{ inputs.cachix-cache }}
+          name: ${{ inputs.cachix-cache != '' && inputs.cachix-cache || 'aloshy-ai' }}
           authToken: ${{ secrets.cachix-auth-token || github.token }}
       - uses: webfactory/ssh-agent@v0.9.0
         if: ${{ inputs.enable-ssh-agent }}
@@ -173,7 +173,7 @@ jobs:
       - uses: cachix/cachix-action@v14
         if: ${{ inputs.enable-cachix && !(github.repository != github.event.repository) && inputs.visibility != '' && (github.ref == format('refs/heads/{0}', inputs.default-branch) || startsWith(github.ref, 'refs/tags/')) }}
         with:
-          name: ${{ inputs.cachix-cache }}
+          name: ${{ inputs.cachix-cache != '' && inputs.cachix-cache || 'aloshy-ai' }}
           authToken: ${{ secrets.cachix-auth-token || github.token }}
       - uses: "DeterminateSystems/flakehub-push@main"
         if: ${{ !(github.repository != github.event.repository) && inputs.visibility != '' && (github.ref == format('refs/heads/{0}', inputs.default-branch) || startsWith(github.ref, 'refs/tags/')) }}
