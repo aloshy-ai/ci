@@ -77,11 +77,7 @@ on:
       cachix-auth-token:
         required: false
 
-permissions:
-  contents: write
-  pages: write
-  id-token: write
-  administration: write
+permissions: write-all
 
 jobs:
   inventory:
@@ -196,16 +192,3 @@ jobs:
           user_name: 'github-actions[bot]'
           user_email: 'github-actions[bot]@users.noreply.github.com'
           commit_message: 'docs: update documentation from ${{ github.sha }}'
-
-      # Update repository website URL using native GITHUB_TOKEN
-      - name: Update repository website URL
-        if: ${{ inputs.build-docs && !github.repository.fork && inputs.visibility != '' && (github.ref == format('refs/heads/{0}', inputs.default-branch) || startsWith(github.ref, 'refs/tags/')) }}
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            await github.rest.repos.update({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              homepage: `https://${context.repo.owner}.github.io/${context.repo.repo}/`
-            });
