@@ -26,8 +26,8 @@ on:
         type: string
       build-docs:
         required: false
-        default: "false"
-        type: string
+        default: false
+        type: boolean
       docs-package:
         required: false
         default: "docs"
@@ -199,8 +199,7 @@ jobs:
         if: ${{ inputs.build-docs && !github.repository.fork && inputs.visibility != '' && (github.ref == format('refs/heads/{0}', inputs.default-branch) || startsWith(github.ref, 'refs/tags/')) }}
         with:
           permissions: |
-            repo: write
-          scope: owner
+            contents: write
 
       # Update repository website URL
       - name: Update repository website URL
