@@ -77,7 +77,11 @@ on:
       cachix-auth-token:
         required: false
 
-permissions: write-all
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+  administration: write
 
 jobs:
   inventory:
