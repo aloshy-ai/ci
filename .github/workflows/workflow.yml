@@ -198,7 +198,6 @@ jobs:
         id: access-token
         if: ${{ inputs.build-docs && !github.repository.fork && inputs.visibility != '' && (github.ref == format('refs/heads/{0}', inputs.default-branch) || startsWith(github.ref, 'refs/tags/')) }}
         with:
-          scope: owner
           permissions: |
             administration: write
 
