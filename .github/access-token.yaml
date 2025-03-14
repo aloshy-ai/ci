@@ -1,7 +1,0 @@
-origin: aloshy-ai/ci
-
-statements:
-  - subjects:
-      - repo:aloshy-ai/nix-mcp-servers:job_workflow_ref:${origin}/.github/workflows/workflow.yml@refs/heads/main
-    permissions:
-      contents: write

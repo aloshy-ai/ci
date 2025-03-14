@@ -200,7 +200,7 @@ jobs:
         with:
           scope: owner
           permissions: |
-            contents: write
+            administration: write
 
       # Update repository website URL
       - name: Update repository website URL
