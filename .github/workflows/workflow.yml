@@ -198,7 +198,8 @@ jobs:
         id: access-token
         if: ${{ inputs.build-docs && !github.repository.fork && inputs.visibility != '' && (github.ref == format('refs/heads/{0}', inputs.default-branch) || startsWith(github.ref, 'refs/tags/')) }}
         with:
-          permissions: write
+          permissions: |
+            admin: write
 
       # Update repository website URL
       - name: Update repository website URL
