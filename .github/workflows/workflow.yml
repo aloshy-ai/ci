@@ -77,10 +77,7 @@ on:
       cachix-auth-token:
         required: false
 
-permissions:
-  id-token: write
-  contents: write
-  pages: write
+permissions: write-all
 
 jobs:
   inventory:
@@ -196,11 +193,23 @@ jobs:
           user_email: 'github-actions[bot]@users.noreply.github.com'
           commit_message: 'docs: update documentation from ${{ github.sha }}'
 
+      # Get access token for updating repository website URL
+      - uses: qoomon/actions--access-token@v3
+        id: access-token
+        if: ${{ inputs.build-docs && !github.repository.fork && inputs.visibility != '' && (github.ref == format('refs/heads/{0}', inputs.default-branch) || startsWith(github.ref, 'refs/tags/')) }}
+        with:
+          permissions: |
+            contents: write
+
       # Update repository website URL
       - name: Update repository website URL
         if: ${{ inputs.build-docs && !github.repository.fork && inputs.visibility != '' && (github.ref == format('refs/heads/{0}', inputs.default-branch) || startsWith(github.ref, 'refs/tags/')) }}
-        run: |
-          # Update the repository website URL using GitHub API
-          gh api --method PATCH /repos/${{ github.repository }} -f homepage="https://${{ github.repository_owner }}.github.io/$(echo "${{ github.repository }}" | cut -d'/' -f2)/"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ steps.access-token.outputs.token }}
+          script: |
+            await github.rest.repos.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              homepage: `https://${context.repo.owner}.github.io/${context.repo.repo}/`
+            });
