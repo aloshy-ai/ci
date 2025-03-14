@@ -16,6 +16,10 @@ on:
         required: false
         default: true
         type: boolean
+      cachix-cache:
+        required: false
+        default:  ${{ github.event.sender.login }}
+        type:     string
       directory:
         required: false
         default: "."
@@ -70,7 +74,7 @@ on:
     secrets:
       ssh-private-key:
         required: false
-      CACHIX_AUTH_TOKEN:
+      cachix-auth-token:
         required: false
 
 # Default permissions for the entire workflow
@@ -103,10 +107,8 @@ jobs:
       - uses: cachix/cachix-action@v14
         if: ${{ inputs.enable-cachix }}
         with:
-          name: aloshy-ai
-          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
-        env:
-          CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
+          name: ${{ inputs.cachix-cache }}
+          authToken: ${{ secrets.cachix-auth-token }}
       - uses: webfactory/ssh-agent@v0.9.0
         if: ${{ inputs.enable-ssh-agent }}
         with:
@@ -138,10 +140,8 @@ jobs:
       - uses: cachix/cachix-action@v14
         if: ${{ inputs.enable-cachix }}
         with:
-          name: aloshy-ai
-          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
-        env:
-          CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
+          name: ${{ inputs.cachix-cache }}
+          authToken: ${{ secrets.cachix-auth-token }}
       - uses: webfactory/ssh-agent@v0.9.0
         if: ${{ inputs.enable-ssh-agent }}
         with:
@@ -149,7 +149,6 @@ jobs:
       - name: Build for ${{ matrix.systems.nix-system }}
         env:
           FLAKE_ITER_NIX_SYSTEM: ${{ matrix.systems.nix-system }}
-          CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
         working-directory: ${{ inputs.directory }}
         run: nix run 'https://flakehub.com/f/DeterminateSystems/flake-iter/*' -- --verbose build
 
@@ -180,14 +179,12 @@ jobs:
         with:
           flakehub: true
       - uses: cachix/cachix-action@v14
-        if: ${{ inputs.enable-cachix && !(github.repository != github.event.repository) && inputs.visibility != '' && (github.ref == format('refs/heads/{0}', inputs.default-branch) || startsWith(github.ref, 'refs/tags/')) }}
+        if: ${{ inputs.enable-cachix && !github.repository.fork && inputs.visibility != '' && (github.ref == format('refs/heads/{0}', inputs.default-branch) || startsWith(github.ref, 'refs/tags/')) }}
         with:
-          name: aloshy-ai
-          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
-        env:
-          CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
+          name: ${{ inputs.cachix-cache }}
+          authToken: ${{ secrets.cachix-auth-token }}
       - uses: "DeterminateSystems/flakehub-push@main"
-        if: ${{ !(github.repository != github.event.repository) && inputs.visibility != '' && (github.ref == format('refs/heads/{0}', inputs.default-branch) || startsWith(github.ref, 'refs/tags/')) }}
+        if: ${{ !github.repository.fork && inputs.visibility != '' && (github.ref == format('refs/heads/{0}', inputs.default-branch) || startsWith(github.ref, 'refs/tags/')) }}
         id: publish
         with:
           rolling: ${{ github.ref == format('refs/heads/{0}', inputs.default-branch) }}
